@@ -1,13 +1,24 @@
 var path = require("path");
 var fs = require('fs');
-module.exports = function (logger, platformsData, projectData, hookArgs) {
+function getPlatformsData($injector) {
+    try {
+        return $injector.resolve("platformsData");
+    } catch (err) {
+        return $injector.resolve("platformsDataService");
+    }
+}
+
+module.exports = function ($logger, $projectData, $injector, hookArgs) {
+        var logger = $logger; 
+        var projectData = $projectData;
+        var platformsData = getPlatformsData($injector);
+
 	return new Promise(function(resolve, reject) {
 
 		var release;
 	
 		var projectDir = projectData.projectDir;
-		var platform = hookArgs.platform.toLowerCase();
-		
+	        const platform = hookArgs.prepareData.platform;	
 		var platformData = platformsData.getPlatformData(platform);
 		var platformOutDir = platformData.appDestinationDirectoryPath;
 		var platformAppDir = path.join(platformOutDir, "app");
@@ -38,7 +49,7 @@ module.exports = function (logger, platformsData, projectData, hookArgs) {
 			logger.error("Cannot resolve build type");
 			reject(e);
 		}
-		logger.write("\nPlatform: " + platform +", Production mode: " + release + "\n");
+		logger.info("\nPlatform: " + platform +", Production mode: " + release + "\n");
 
 		var keepFiles="debug";
 		var deleteFiles="production";
